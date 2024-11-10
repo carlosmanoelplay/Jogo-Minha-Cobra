@@ -15,7 +15,7 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 
 import java.util.Random;
 
-public class Gamescreen implements Screen,GestureDetector.GestureListener {
+public class Gamescreen implements Screen, GestureDetector.GestureListener {
 
     private Game game;
     private Viewport viewport;
@@ -29,7 +29,7 @@ public class Gamescreen implements Screen,GestureDetector.GestureListener {
 
     private Array<Vector2> partes;
 
-    private int direcao;   //1 para frente , 2 para direita, 3 para baixo , 4 pra esquerda.
+    private int direcao; // 1 para frente, 2 para direita, 3 para baixo, 4 para esquerda.
 
     private float timeToMove;
     private Vector2 toque;
@@ -37,7 +37,6 @@ public class Gamescreen implements Screen,GestureDetector.GestureListener {
     private float timeToNext;
 
     private Random rand;
-
 
     public Gamescreen(Game game) {
         this.game = game;
@@ -57,10 +56,9 @@ public class Gamescreen implements Screen,GestureDetector.GestureListener {
         Gdx.input.setInputProcessor(new GestureDetector(this));
     }
 
-
     @Override
     public void render(float delta) {
-        updete(delta);
+        update(delta);
 
         batch.setProjectionMatrix(viewport.getCamera().combined);
 
@@ -69,37 +67,32 @@ public class Gamescreen implements Screen,GestureDetector.GestureListener {
 
         batch.begin();
         batch.draw(texFundo, 0, 0, 100, 100);
-        for (Vector2 pastes : partes) {
-            batch.draw(texCorpo, pastes.x * 5, pastes.y * 5, 5, 5);
+        for (Vector2 parte : partes) {
+            batch.draw(texCorpo, parte.x * 5, parte.y * 5, 5, 5);
         }
         for (Vector2 ponto : pontos) {
             batch.draw(texPonto, ponto.x * 5, ponto.y * 5, 5, 5);
         }
         batch.end();
-
-
     }
 
     public void gerarTextura() {
-        // Criação de texCorpo
         Pixmap pixmap = new Pixmap(64, 64, Pixmap.Format.RGBA8888);
         pixmap.setColor(1f, 1f, 1f, 1f);
         pixmap.fillRectangle(0, 0, 64, 64);
         texCorpo = new Texture(pixmap);
         pixmap.dispose();
 
-        // Criação de texFundo
         Pixmap pixmap2 = new Pixmap(64, 64, Pixmap.Format.RGBA8888);
         pixmap2.setColor(0.29f, 0.784f, 0.373f, 0.5f);
         pixmap2.fillRectangle(0, 0, 64, 64);
-        texFundo = new Texture(pixmap2); // Corrigido para usar pixmap2
+        texFundo = new Texture(pixmap2);
         pixmap2.dispose();
 
-        // Criação de texPonto
         Pixmap pixmap3 = new Pixmap(64, 64, Pixmap.Format.RGBA8888);
         pixmap3.setColor(1f, 1f, 1f, 1f);
         pixmap3.fillCircle(32, 32, 32);
-        texPonto = new Texture(pixmap3); // Corrigido para usar pixmap3
+        texPonto = new Texture(pixmap3);
         pixmap3.dispose();
     }
 
@@ -108,55 +101,11 @@ public class Gamescreen implements Screen,GestureDetector.GestureListener {
         viewport.update(width, height, true);
     }
 
-
-
-    private void updete(float delta) {
+    private void update(float delta) {
         timeToMove -= delta;
         if (timeToMove <= 0) {
-            timeToMove = 0.4f;
-        }
-        Gdx.app.log("log", "move");
-
-        int x1, x2, y1, y2;
-
-        x1 = (int) partes.get(0).x;
-        y1 = (int) partes.get(0).y;
-        corpo[x1][y1] = false;
-        x2 = x1;
-        y2 = y1;
-        switch (direcao) {
-            case 1:
-                y1++;
-                break;
-            case 2:
-                x1++;
-                break;
-            case 3:
-                y1--;
-                break;
-            case 4:
-                x1--;
-                break;
-
-        }
-        if (x1 < 0 || y1 < 0 || x1 > 19 || y1 > 19 || corpo[x1][y1]) {
-            // perdemos
-
-            return;
-        }
-        partes.get(0).set(x1, y1);
-        corpo[x1][y1] = true;
-
-        for (int i = 1; i < partes.size; i++) {
-            x1 = (int) partes.get(i).x;
-            y1 = (int) partes.get(i).y;
-            ;
-            corpo[x1][y1] = false;
-
-            partes.get(i).set(x2, y2);
-            corpo[x2][y2] = true;
-            x2 = x1;
-            y2 = y1;
+            timeToMove = 0.6f; // Aumentado para deixar a cobra mais lenta
+            moveSnake();
         }
 
         timeToNext -= delta;
@@ -166,14 +115,49 @@ public class Gamescreen implements Screen,GestureDetector.GestureListener {
             if (!corpo[x][y]) {
                 pontos.add(new Vector2(x, y));
                 timeToNext = 5f;
-
             }
         }
     }
+
+    private void moveSnake() {
+        int x1, x2, y1, y2;
+
+        x1 = (int) partes.get(0).x;
+        y1 = (int) partes.get(0).y;
+        corpo[x1][y1] = false;
+        x2 = x1;
+        y2 = y1;
+        switch (direcao) {
+            case 1: y1++;
+                break;
+            case 2: x1++;
+                break;
+            case 3: y1--;
+                break;
+            case 4: x1--;
+                break;
+        }
+        if (x1 < 0 || y1 < 0 || x1 > 19 || y1 > 19 || corpo[x1][y1]) {
+            return; // Perdemos
+        }
+        partes.get(0).set(x1, y1);
+        corpo[x1][y1] = true;
+
+        for (int i = 1; i < partes.size; i++) {
+            x1 = (int) partes.get(i).x;
+            y1 = (int) partes.get(i).y;
+            corpo[x1][y1] = false;
+
+            partes.get(i).set(x2, y2);
+            corpo[x2][y2] = true;
+            x2 = x1;
+            y2 = y1;
+        }
+    }
+
     @Override
     public boolean fling(float velocityX, float velocityY, int button) {
         viewport.unproject(toque.set(velocityX, velocityY));
-        Gdx.app.log("log", velocityX + " " + velocityY + " " + toque.x + " " + toque.y);
         if (Math.abs(toque.x) > Math.abs(toque.y)) toque.y = 0;
         else toque.x = 0;
         if (toque.x > 50 && direcao != 4) {
@@ -187,43 +171,35 @@ public class Gamescreen implements Screen,GestureDetector.GestureListener {
         }
         return true;
     }
+
     private boolean init() {
         corpo = new boolean[20][20];
-        partes = new Array<Vector2>();
+        partes = new Array<>();
         partes.add(new Vector2(6, 5));
         corpo[6][5] = true;
         partes.add(new Vector2(5, 5));
         corpo[5][5] = true;
         direcao = 2;
 
-        timeToMove = 0.4f;
+        timeToMove = 0.6f; // Aumentado para desacelerar a cobra
 
-        pontos = new Array<Vector2>();
+        pontos = new Array<>();
 
         timeToNext = 3f;
-
-
         return false;
     }
-    @Override
-    public void pause() {
-
-    }
 
     @Override
-    public void resume() {
-
-    }
+    public void pause() {}
 
     @Override
-    public void hide() {
-
-    }
+    public void resume() {}
 
     @Override
-    public void dispose() {
+    public void hide() {}
 
-    }
+    @Override
+    public void dispose() {}
 
     @Override
     public boolean touchDown(float x, float y, int pointer, int button) {
@@ -239,8 +215,6 @@ public class Gamescreen implements Screen,GestureDetector.GestureListener {
     public boolean longPress(float x, float y) {
         return false;
     }
-
-
 
     @Override
     public boolean pan(float x, float y, float deltaX, float deltaY) {
@@ -263,9 +237,5 @@ public class Gamescreen implements Screen,GestureDetector.GestureListener {
     }
 
     @Override
-    public void pinchStop() {
-
-    }
-
-
+    public void pinchStop() {}
 }
