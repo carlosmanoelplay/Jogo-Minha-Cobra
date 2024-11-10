@@ -26,7 +26,9 @@ public class Gamescreen implements Screen {
 
     private Array<Vector2> partes;
 
-    private int direcao;   //1 para frente , 2 para direita, 3 para esquerda , 4 pra baixo.
+    private int direcao;   //1 para frente , 2 para direita, 3 para baixo , 4 pra esquerda.
+
+    private float timeToMove;
 
     public Gamescreen(Game game) {
         this.game = game;
@@ -45,6 +47,8 @@ public class Gamescreen implements Screen {
 
     @Override
     public void render(float delta) {
+        updete(dalta);
+
         batch.setProjectionMatrix(viewport.getCamera().combined);
 
         Gdx.gl.glClearColor(0.29f, 0.894f, 0.303f, 1);
@@ -56,6 +60,7 @@ public class Gamescreen implements Screen {
             batch.draw(texCorpo, pastes.x*5, pastes.y*5, 5, 5);
         }
         batch.end();
+
 
 
     }
@@ -87,6 +92,37 @@ public class Gamescreen implements Screen {
     public void resize(int width, int height) {
         viewport.update(width, height, true);
     }
+
+    private void  updete(float delta){
+        timeToMove -= delta;
+        if (timeToMove <= 0){
+            timeToMove = 0.4f;
+        }
+        Gdx.app.log("log", "move");
+
+        int x1, x2, y1, y2;
+
+        x1 = (int)partes.get(0).x;
+        y1 = (int) partes.get(0).y;
+        corpo[x1][y1] = false;
+        x2 = x1;
+        y2 = y1;
+        switch (direcao){
+            case 1:
+                y1++;
+                break;
+            case 2:
+                x1++;
+                break;
+            case 3:
+                x1--;
+                break;
+            case 4:
+                y1--;
+                break;
+
+        }
+    }
     private void init(){
         corpo = new boolean[20][20];
         partes = new Array<Vector2>();
@@ -95,6 +131,8 @@ public class Gamescreen implements Screen {
         partes.add(new Vector2(5, 5));
         corpo[5][5] = true;
         direcao = 2;
+
+        timeToMove = 0.4f;
     }
 
     @Override
