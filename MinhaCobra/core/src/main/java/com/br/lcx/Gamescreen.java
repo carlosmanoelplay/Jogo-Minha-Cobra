@@ -13,6 +13,8 @@ import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 
+import java.util.Random;
+
 public class Gamescreen implements Screen,GestureDetector.GestureListener {
 
     private Game game;
@@ -23,7 +25,7 @@ public class Gamescreen implements Screen,GestureDetector.GestureListener {
     private Texture texFundo;
     private Texture texPonto;
 
-    private boolean [][] corpo;
+    private boolean[][] corpo;
 
     private Array<Vector2> partes;
 
@@ -31,6 +33,10 @@ public class Gamescreen implements Screen,GestureDetector.GestureListener {
 
     private float timeToMove;
     private Vector2 toque;
+    private Array<Vector2> pontos;
+    private float timeToNext;
+
+    private Random rand;
 
 
     public Gamescreen(Game game) {
@@ -45,10 +51,12 @@ public class Gamescreen implements Screen,GestureDetector.GestureListener {
         batch = new SpriteBatch(); // Inicializa o batch
         gerarTextura();
         toque = new Vector2();
+        rand = new Random();
 
         init();
         Gdx.input.setInputProcessor(new GestureDetector(this));
     }
+
 
     @Override
     public void render(float delta) {
@@ -61,11 +69,13 @@ public class Gamescreen implements Screen,GestureDetector.GestureListener {
 
         batch.begin();
         batch.draw(texFundo, 0, 0, 100, 100);
-        for (Vector2 pastes:partes){
-            batch.draw(texCorpo, pastes.x*5, pastes.y*5, 5, 5);
+        for (Vector2 pastes : partes) {
+            batch.draw(texCorpo, pastes.x * 5, pastes.y * 5, 5, 5);
+        }
+        for (Vector2 ponto : pontos) {
+            batch.draw(texPonto, ponto.x * 5, ponto.y * 5, 5, 5);
         }
         batch.end();
-
 
 
     }
@@ -98,21 +108,23 @@ public class Gamescreen implements Screen,GestureDetector.GestureListener {
         viewport.update(width, height, true);
     }
 
-    private void  updete(float delta){
+
+
+    private void updete(float delta) {
         timeToMove -= delta;
-        if (timeToMove <= 0){
+        if (timeToMove <= 0) {
             timeToMove = 0.4f;
         }
         Gdx.app.log("log", "move");
 
         int x1, x2, y1, y2;
 
-        x1 = (int)partes.get(0).x;
+        x1 = (int) partes.get(0).x;
         y1 = (int) partes.get(0).y;
         corpo[x1][y1] = false;
         x2 = x1;
         y2 = y1;
-        switch (direcao){
+        switch (direcao) {
             case 1:
                 y1++;
                 break;
@@ -127,7 +139,7 @@ public class Gamescreen implements Screen,GestureDetector.GestureListener {
                 break;
 
         }
-        if (x1 <0 || y1 < 0 || x1 > 19 || y1 > 19 || corpo[x1][y1]){
+        if (x1 < 0 || y1 < 0 || x1 > 19 || y1 > 19 || corpo[x1][y1]) {
             // perdemos
 
             return;
@@ -135,15 +147,27 @@ public class Gamescreen implements Screen,GestureDetector.GestureListener {
         partes.get(0).set(x1, y1);
         corpo[x1][y1] = true;
 
-        for(int i = 1; i < partes.size; i++){
-            x1 = (int)partes.get(i).x;
+        for (int i = 1; i < partes.size; i++) {
+            x1 = (int) partes.get(i).x;
             y1 = (int) partes.get(i).y;
-            ;corpo[x1][y1] = false;
+            ;
+            corpo[x1][y1] = false;
 
             partes.get(i).set(x2, y2);
             corpo[x2][y2] = true;
             x2 = x1;
             y2 = y1;
+        }
+
+        timeToNext -= delta;
+        if (timeToNext <= 0) {
+            int x = rand.nextInt(20);
+            int y = rand.nextInt(20);
+            if (!corpo[x][y]) {
+                pontos.add(new Vector2(x, y));
+                timeToNext = 5f;
+
+            }
         }
     }
     @Override
@@ -152,44 +176,53 @@ public class Gamescreen implements Screen,GestureDetector.GestureListener {
         Gdx.app.log("log", velocityX + " " + velocityY + " " + toque.x + " " + toque.y);
         if (Math.abs(toque.x) > Math.abs(toque.y)) toque.y = 0;
         else toque.x = 0;
-        if (toque.x > 50 && direcao != 4){
+        if (toque.x > 50 && direcao != 4) {
             direcao = 2;
         } else if (toque.y > 50 && direcao != 3) {
             direcao = 1;
         } else if (toque.x < -50 && direcao != 2) {
             direcao = 4;
-        } else if (toque.y < -50 && direcao !=1) {
+        } else if (toque.y < -50 && direcao != 1) {
             direcao = 3;
         }
         return true;
     }
-    private void init(){
+    private boolean init() {
         corpo = new boolean[20][20];
         partes = new Array<Vector2>();
-        partes.add(new Vector2(6,5));
+        partes.add(new Vector2(6, 5));
         corpo[6][5] = true;
         partes.add(new Vector2(5, 5));
         corpo[5][5] = true;
         direcao = 2;
 
         timeToMove = 0.4f;
+
+        pontos = new Array<Vector2>();
+
+        timeToNext = 3f;
+
+
+        return false;
+    }
+    @Override
+    public void pause() {
+
     }
 
     @Override
-    public void pause() {}
+    public void resume() {
+
+    }
 
     @Override
-    public void resume() {}
+    public void hide() {
 
-    @Override
-    public void hide() {}
+    }
 
     @Override
     public void dispose() {
-        if (batch != null) batch.dispose();
-        if (texCorpo != null) texCorpo.dispose();
-        if (texFundo != null) texFundo.dispose();
-        if (texPonto != null) texPonto.dispose();
+
     }
 
     @Override
@@ -233,4 +266,6 @@ public class Gamescreen implements Screen,GestureDetector.GestureListener {
     public void pinchStop() {
 
     }
+
+
 }
