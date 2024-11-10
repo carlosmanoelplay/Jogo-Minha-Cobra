@@ -157,21 +157,24 @@ public class Gamescreen implements Screen, GestureDetector.GestureListener {
 
     @Override
     public boolean fling(float velocityX, float velocityY, int button) {
-        viewport.unproject(toque.set(velocityX, velocityY));
-        if (Math.abs(toque.x) > Math.abs(toque.y)) toque.y = 0;
-        else toque.x = 0;
-        if (toque.x > 50 && direcao != 4) {
-            direcao = 2;
-        } else if (toque.y > 50 && direcao != 3) {
-            direcao = 1;
-        } else if (toque.x < -50 && direcao != 2) {
-            direcao = 4;
-        } else if (toque.y < -50 && direcao != 1) {
-            direcao = 3;
+        // Define a direção com base no movimento horizontal ou vertical mais forte
+        if (Math.abs(velocityX) > Math.abs(velocityY)) {
+            // Movimento na horizontal
+            if (velocityX > 0 && direcao != 4) {
+                direcao = 2; // Direita
+            } else if (velocityX < 0 && direcao != 2) {
+                direcao = 4; // Esquerda
+            }
+        } else {
+            // Movimento na vertical
+            if (velocityY > 0 && direcao != 1) {
+                direcao = 3; // Baixo
+            } else if (velocityY < 0 && direcao != 3) {
+                direcao = 1; // Cima
+            }
         }
         return true;
     }
-
     private boolean init() {
         corpo = new boolean[20][20];
         partes = new Array<>();
