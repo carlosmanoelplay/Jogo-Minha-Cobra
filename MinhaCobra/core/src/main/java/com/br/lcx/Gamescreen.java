@@ -7,12 +7,13 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.input.GestureDetector;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 
-public class Gamescreen implements Screen {
+public class Gamescreen implements Screen,GestureDetector.GestureListener {
 
     private Game game;
     private Viewport viewport;
@@ -29,6 +30,8 @@ public class Gamescreen implements Screen {
     private int direcao;   //1 para frente , 2 para direita, 3 para baixo , 4 pra esquerda.
 
     private float timeToMove;
+    private Vector2 toque;
+
 
     public Gamescreen(Game game) {
         this.game = game;
@@ -41,13 +44,15 @@ public class Gamescreen implements Screen {
 
         batch = new SpriteBatch(); // Inicializa o batch
         gerarTextura();
+        toque = new Vector2();
 
         init();
+        Gdx.input.setInputProcessor(new GestureDetector(this));
     }
 
     @Override
     public void render(float delta) {
-        updete(dalta);
+        updete(delta);
 
         batch.setProjectionMatrix(viewport.getCamera().combined);
 
@@ -115,13 +120,48 @@ public class Gamescreen implements Screen {
                 x1++;
                 break;
             case 3:
-                x1--;
+                y1--;
                 break;
             case 4:
-                y1--;
+                x1--;
                 break;
 
         }
+        if (x1 <0 || y1 < 0 || x1 > 19 || y1 > 19 || corpo[x1][y1]){
+            // perdemos
+
+            return;
+        }
+        partes.get(0).set(x1, y1);
+        corpo[x1][y1] = true;
+
+        for(int i = 1; i < partes.size; i++){
+            x1 = (int)partes.get(i).x;
+            y1 = (int) partes.get(i).y;
+            ;corpo[x1][y1] = false;
+
+            partes.get(i).set(x2, y2);
+            corpo[x2][y2] = true;
+            x2 = x1;
+            y2 = y1;
+        }
+    }
+    @Override
+    public boolean fling(float velocityX, float velocityY, int button) {
+        viewport.unproject(toque.set(velocityX, velocityY));
+        Gdx.app.log("log", velocityX + " " + velocityY + " " + toque.x + " " + toque.y);
+        if (Math.abs(toque.x) > Math.abs(toque.y)) toque.y = 0;
+        else toque.x = 0;
+        if (toque.x > 50 && direcao != 4){
+            direcao = 2;
+        } else if (toque.y > 50 && direcao != 3) {
+            direcao = 1;
+        } else if (toque.x < -50 && direcao != 2) {
+            direcao = 4;
+        } else if (toque.y < -50 && direcao !=1) {
+            direcao = 3;
+        }
+        return true;
     }
     private void init(){
         corpo = new boolean[20][20];
@@ -150,5 +190,47 @@ public class Gamescreen implements Screen {
         if (texCorpo != null) texCorpo.dispose();
         if (texFundo != null) texFundo.dispose();
         if (texPonto != null) texPonto.dispose();
+    }
+
+    @Override
+    public boolean touchDown(float x, float y, int pointer, int button) {
+        return false;
+    }
+
+    @Override
+    public boolean tap(float x, float y, int count, int button) {
+        return false;
+    }
+
+    @Override
+    public boolean longPress(float x, float y) {
+        return false;
+    }
+
+
+
+    @Override
+    public boolean pan(float x, float y, float deltaX, float deltaY) {
+        return false;
+    }
+
+    @Override
+    public boolean panStop(float x, float y, int pointer, int button) {
+        return false;
+    }
+
+    @Override
+    public boolean zoom(float initialDistance, float distance) {
+        return false;
+    }
+
+    @Override
+    public boolean pinch(Vector2 initialPointer1, Vector2 initialPointer2, Vector2 pointer1, Vector2 pointer2) {
+        return false;
+    }
+
+    @Override
+    public void pinchStop() {
+
     }
 }
