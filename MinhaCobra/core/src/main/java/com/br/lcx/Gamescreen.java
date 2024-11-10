@@ -26,17 +26,14 @@ public class Gamescreen implements Screen, GestureDetector.GestureListener {
     private Texture texPonto;
 
     private boolean[][] corpo;
-
     private Array<Vector2> partes;
-
     private int direcao; // 1 para frente, 2 para direita, 3 para baixo, 4 para esquerda.
-
     private float timeToMove;
     private Vector2 toque;
     private Array<Vector2> pontos;
     private float timeToNext;
-
     private Random rand;
+    private int estado;
 
     public Gamescreen(Game game) {
         this.game = game;
@@ -102,19 +99,21 @@ public class Gamescreen implements Screen, GestureDetector.GestureListener {
     }
 
     private void update(float delta) {
-        timeToMove -= delta;
-        if (timeToMove <= 0) {
-            timeToMove = 0.6f; // Aumentado para deixar a cobra mais lenta
-            moveSnake();
-        }
+        if (estado == 0) {
+            timeToMove -= delta;
+            if (timeToMove <= 0) {
+                timeToMove = 0.6f; // Aumentado para deixar a cobra mais lenta
+                moveSnake();
+            }
 
-        timeToNext -= delta;
-        if (timeToNext <= 0) {
-            int x = rand.nextInt(20);
-            int y = rand.nextInt(20);
-            if (!corpo[x][y]) {
-                pontos.add(new Vector2(x, y));
-                timeToNext = 5f;
+            timeToNext -= delta;
+            if (timeToNext <= 0) {
+                int x = rand.nextInt(20);
+                int y = rand.nextInt(20);
+                if (!corpo[x][y]) {
+                    pontos.add(new Vector2(x, y));
+                    timeToNext = 5f;
+                }
             }
         }
     }
@@ -128,17 +127,31 @@ public class Gamescreen implements Screen, GestureDetector.GestureListener {
         x2 = x1;
         y2 = y1;
         switch (direcao) {
-            case 1: y1++;
+            case 1:
+                y1++;
                 break;
-            case 2: x1++;
+            case 2:
+                x1++;
                 break;
-            case 3: y1--;
+            case 3:
+                y1--;
                 break;
-            case 4: x1--;
+            case 4:
+                x1--;
                 break;
         }
         if (x1 < 0 || y1 < 0 || x1 > 19 || y1 > 19 || corpo[x1][y1]) {
+            estado = 1;
             return; // Perdemos
+        }
+        for (int j = 0; j < pontos.size; j++) {
+            if (pontos.get(j).x == x1 && pontos.get(j).y == y1) {
+                pontos.removeIndex(j);
+                partes.insert(0, new Vector2(x1, y1));
+                corpo[x1][y1] = true;
+                corpo[x2][y2] = true;
+                return;
+            }
         }
         partes.get(0).set(x1, y1);
         corpo[x1][y1] = true;
@@ -157,25 +170,31 @@ public class Gamescreen implements Screen, GestureDetector.GestureListener {
 
     @Override
     public boolean fling(float velocityX, float velocityY, int button) {
-        // Define a direção com base no movimento horizontal ou vertical mais forte
-        if (Math.abs(velocityX) > Math.abs(velocityY)) {
-            // Movimento na horizontal
-            if (velocityX > 0 && direcao != 4) {
-                direcao = 2; // Direita
-            } else if (velocityX < 0 && direcao != 2) {
-                direcao = 4; // Esquerda
-            }
-        } else {
-            // Movimento na vertical
-            if (velocityY > 0 && direcao != 1) {
-                direcao = 3; // Baixo
-            } else if (velocityY < 0 && direcao != 3) {
-                direcao = 1; // Cima
+        if (estado == 0) {
+            if (Math.abs(velocityX) > Math.abs(velocityY)) {
+                if (velocityX > 0 && direcao != 4) {
+                    direcao = 2; // Direita
+                } else if (velocityX < 0 && direcao != 2) {
+                    direcao = 4; // Esquerda
+                }
+            } else {
+                if (velocityY > 0 && direcao != 1) {
+                    direcao = 3; // Baixo
+                } else if (velocityY < 0 && direcao != 3) {
+                    direcao = 1; // Cima
+                }
             }
         }
         return true;
     }
-    private boolean init() {
+
+    @Override
+    public boolean tap(float x, float y, int count, int button) {
+        if (estado == 1) game.setScreen(new Mainscreen(game));
+        return true;
+    }
+
+    private void init() {
         corpo = new boolean[20][20];
         partes = new Array<>();
         partes.add(new Vector2(6, 5));
@@ -184,12 +203,10 @@ public class Gamescreen implements Screen, GestureDetector.GestureListener {
         corpo[5][5] = true;
         direcao = 2;
 
-        timeToMove = 0.6f; // Aumentado para desacelerar a cobra
-
+        timeToMove = 0.6f;
         pontos = new Array<>();
-
         timeToNext = 3f;
-        return false;
+        estado = 0;
     }
 
     @Override
@@ -206,11 +223,6 @@ public class Gamescreen implements Screen, GestureDetector.GestureListener {
 
     @Override
     public boolean touchDown(float x, float y, int pointer, int button) {
-        return false;
-    }
-
-    @Override
-    public boolean tap(float x, float y, int count, int button) {
         return false;
     }
 

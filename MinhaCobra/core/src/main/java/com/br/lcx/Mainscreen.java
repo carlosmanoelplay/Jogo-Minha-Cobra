@@ -33,6 +33,8 @@ public class Mainscreen implements Screen {
         fund[1] = new Texture("fund1.png");
         tempo = 0f;
         segurando = false;
+        Gdx.input.setInputProcessor(null);
+
 
     }
 
